@@ -58,6 +58,7 @@ export default function CartPage() {
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
   const [recoAdded, setRecoAdded] = useState<Record<number, boolean>>({});
+  const [recoWished, setRecoWished] = useState<Record<number, boolean>>({});
 
   const updateQty = (id: number, delta: number) => {
     setItems(prev => prev.map(item =>
@@ -268,16 +269,18 @@ export default function CartPage() {
 
                 {/* Trust badges */}
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  {[
-                    { emoji: "🛡️", label: "Secure\nPayment", color: "text-[#4caf50]" },
-                    { emoji: "🚚", label: "Fast\nDelivery",  color: "text-[#e91e8c]" },
-                    { emoji: "📦", label: "Easy\nReturns",  color: "text-[#ff9800]" },
-                  ].map((b, i) => (
-                    <div key={i} className="bg-gray-50 rounded-xl p-2.5">
-                      <div className="text-lg mb-1">{b.emoji}</div>
-                      <div className={`text-[10px] font-bold ${b.color} leading-tight whitespace-pre-line`}>{b.label}</div>
-                    </div>
-                  ))}
+                  <div className="bg-gray-50 rounded-xl p-2.5 flex flex-col items-center">
+                    <svg className="w-5 h-5 mb-1 fill-[#4caf50]" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L17 9l-8 8z"/></svg>
+                    <div className="text-[10px] font-bold text-[#4caf50] leading-tight">Secure<br/>Payment</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-2.5 flex flex-col items-center">
+                    <svg className="w-5 h-5 mb-1 fill-[#e91e8c]" viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zm-1 1.5l1.96 2.5H17V9.5h2zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                    <div className="text-[10px] font-bold text-[#e91e8c] leading-tight">Fast<br/>Delivery</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-2.5 flex flex-col items-center">
+                    <svg className="w-5 h-5 mb-1 fill-[#ff9800]" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                    <div className="text-[10px] font-bold text-[#ff9800] leading-tight">Easy<br/>Returns</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -297,21 +300,31 @@ export default function CartPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {recoProducts.map((p) => (
               <div key={p.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-                <Link href={`/shop/${p.id}`} className="block relative shrink-0" style={{ height: 170 }}>
-                  <div className={`${p.bg} absolute inset-0`} />
-                  <Image src={p.image} alt={p.name} fill className="object-cover" sizes="20vw" />
-                </Link>
+                <div className="relative shrink-0" style={{ height: 170 }}>
+                  <Link href={`/shop/${p.id}`} className="block absolute inset-0">
+                    <div className={`${p.bg} absolute inset-0`} />
+                    <Image src={p.image} alt={p.name} fill className="object-cover" sizes="20vw" />
+                  </Link>
+                  <button
+                    onClick={() => setRecoWished(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
+                    className="absolute top-2.5 right-2.5 z-10 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center transition-colors"
+                  >
+                    <svg className={`w-4 h-4 transition-colors ${recoWished[p.id] ? "fill-[#e91e8c] stroke-[#e91e8c]" : "fill-none stroke-gray-400"}`} strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
+                </div>
                 <div className="p-3 flex flex-col flex-1">
                   <Link href={`/shop/${p.id}`}>
                     <h4 className="text-sm font-bold text-[#1a1a2e] line-clamp-2 mb-1 hover:text-[#e91e8c] transition-colors">{p.name}</h4>
                   </Link>
-                  <div className="flex items-center gap-1 mb-1.5">
-                    <Stars rating={p.rating} />
-                    <span className="text-xs text-gray-400">({p.reviews})</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-wrap mb-3">
+                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
                     <span className="font-black text-sm text-[#1a1a2e]">₹{p.price}</span>
                     <span className="text-xs text-gray-400 line-through">₹{p.origPrice}</span>
+                  </div>
+                  <div className="flex items-center gap-1 mb-3">
+                    <Stars rating={p.rating} />
+                    <span className="text-xs text-gray-400">({p.reviews})</span>
                   </div>
                   <button
                     className="mt-auto"

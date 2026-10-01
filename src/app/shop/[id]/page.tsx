@@ -232,45 +232,69 @@ const sampleReviews = [
   { name: "Anita K.", date: "3 months ago", rating: 4, text: "Good value for money. My son enjoys it a lot. Delivery was quick and packaging was nice. Will order more items soon.", verified: false },
 ];
 
-function getFeatures(material: string) {
+type FeatureIcon = { path: string; fill?: boolean };
+type Feature = { icon: FeatureIcon; label: string; bg: string; iconColor: string };
+
+const ICONS = {
+  leaf:    { fill: false, path: "M12 2C9 5 6 9 6 13a6 6 0 0012 0C18 9 15 5 12 2z M12 2v10" },
+  bulb:    { fill: false, path: "M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" },
+  hand:    { fill: false, path: "M7 11.5V5.5a1.5 1.5 0 013 0v6m0-5a1.5 1.5 0 013 0v5m0-3.5a1.5 1.5 0 013 0V17a5 5 0 01-5 5H8l-3-3 1.5-1.5L8 20h1V11.5" },
+  shield:  { fill: false, path: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+  star:    { fill: false, path: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" },
+  wash:    { fill: false, path: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" },
+  heart:   { fill: true,  path: "M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" },
+  book:    { fill: false, path: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" },
+  sparkle: { fill: false, path: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" },
+  bounce:  { fill: false, path: "M9 11l3 3L22 4M7 19H5a2 2 0 01-2-2v-5m0 0V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V17a2 2 0 01-2 2h-2" },
+};
+
+function FeatureSVG({ icon, className = "w-6 h-6" }: { icon: FeatureIcon; className?: string }) {
+  return (
+    <svg className={className} fill={icon.fill ? "white" : "none"} stroke="white" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d={icon.path} fill={icon.fill ? "white" : "none"} />
+    </svg>
+  );
+}
+
+function getFeatures(material: string): Feature[] {
   const m = material.toLowerCase();
   if (m.includes("wood") || m.includes("plywood") || m.includes("rubberwood") || m.includes("pinewood")) {
     return [
-      { emoji: "🌿", label: "Safe &\nNon-Toxic", bg: "bg-[#e8f5e9]" },
-      { emoji: "🧠", label: "Boosts\nThinking Skills", bg: "bg-[#f3e5f5]" },
-      { emoji: "🤲", label: "Improves\nMotor Skills", bg: "bg-[#fce4ec]" },
-      { emoji: "🛡️", label: "Durable &\nLong Lasting", bg: "bg-[#fffde7]" },
+      { icon: ICONS.leaf,   label: "Safe &\nNon-Toxic",       bg: "bg-[#e8f5e9]", iconColor: "bg-[#4caf50]" },
+      { icon: ICONS.bulb,   label: "Boosts\nThinking Skills", bg: "bg-[#f3e5f5]", iconColor: "bg-[#9c27b0]" },
+      { icon: ICONS.hand,   label: "Improves\nMotor Skills",  bg: "bg-[#fce4ec]", iconColor: "bg-[#e91e8c]" },
+      { icon: ICONS.shield, label: "Durable &\nLong Lasting", bg: "bg-[#fffde7]", iconColor: "bg-[#f9a825]" },
     ];
   }
   if (m.includes("plush") || m.includes("polyester")) {
     return [
-      { emoji: "🧸", label: "Ultra\nSoft Plush", bg: "bg-[#fce4ec]" },
-      { emoji: "🛡️", label: "Safe for\nAll Ages", bg: "bg-[#e8f5e9]" },
-      { emoji: "🧺", label: "Machine\nWashable", bg: "bg-[#e3f2fd]" },
-      { emoji: "❤️", label: "Perfect\nCompanion", bg: "bg-[#f3e5f5]" },
+      { icon: ICONS.heart,   label: "Ultra\nSoft Plush",    bg: "bg-[#fce4ec]", iconColor: "bg-[#e91e8c]" },
+      { icon: ICONS.shield,  label: "Safe for\nAll Ages",   bg: "bg-[#e8f5e9]", iconColor: "bg-[#4caf50]" },
+      { icon: ICONS.wash,    label: "Machine\nWashable",    bg: "bg-[#e3f2fd]", iconColor: "bg-[#1e88e5]" },
+      { icon: ICONS.sparkle, label: "Perfect\nCompanion",   bg: "bg-[#f3e5f5]", iconColor: "bg-[#9c27b0]" },
     ];
   }
   if (m.includes("paper") || m.includes("cardboard") || m.includes("hardcover")) {
     return [
-      { emoji: "📚", label: "Educational\nValue", bg: "bg-[#e8f5e9]" },
-      { emoji: "🌈", label: "Vibrant\nIllustrations", bg: "bg-[#fce4ec]" },
-      { emoji: "✍️", label: "Develops\nWriting Skills", bg: "bg-[#f3e5f5]" },
-      { emoji: "🎓", label: "School-Ready\nLearning", bg: "bg-[#fffde7]" },
+      { icon: ICONS.book,    label: "Educational\nValue",        bg: "bg-[#e8f5e9]", iconColor: "bg-[#4caf50]" },
+      { icon: ICONS.sparkle, label: "Vibrant\nIllustrations",    bg: "bg-[#fce4ec]", iconColor: "bg-[#e91e8c]" },
+      { icon: ICONS.hand,    label: "Develops\nWriting Skills",  bg: "bg-[#f3e5f5]", iconColor: "bg-[#9c27b0]" },
+      { icon: ICONS.star,    label: "School-Ready\nLearning",    bg: "bg-[#fffde7]", iconColor: "bg-[#f9a825]" },
     ];
   }
   if (m.includes("rubber")) {
     return [
-      { emoji: "🌿", label: "Eco-Friendly\nRubber", bg: "bg-[#e8f5e9]" },
-      { emoji: "💪", label: "Super\nDurable", bg: "bg-[#fffde7]" },
-      { emoji: "🤸", label: "Active\nPlay", bg: "bg-[#fce4ec]" },
-      { emoji: "✅", label: "Safe\nMaterials", bg: "bg-[#e3f2fd]" },
+      { icon: ICONS.leaf,   label: "Eco-Friendly\nRubber", bg: "bg-[#e8f5e9]", iconColor: "bg-[#4caf50]" },
+      { icon: ICONS.shield, label: "Super\nDurable",       bg: "bg-[#fffde7]", iconColor: "bg-[#f9a825]" },
+      { icon: ICONS.bounce, label: "Active\nPlay",         bg: "bg-[#fce4ec]", iconColor: "bg-[#e91e8c]" },
+      { icon: ICONS.star,   label: "Safe\nMaterials",      bg: "bg-[#e3f2fd]", iconColor: "bg-[#1e88e5]" },
     ];
   }
   return [
-    { emoji: "🌿", label: "Safe &\nNon-Toxic", bg: "bg-[#e8f5e9]" },
-    { emoji: "🧠", label: "Boosts\nCreativity", bg: "bg-[#f3e5f5]" },
-    { emoji: "🎉", label: "Hours\nof Fun", bg: "bg-[#fffde7]" },
-    { emoji: "🛡️", label: "Durable\n& Safe", bg: "bg-[#fce4ec]" },
+    { icon: ICONS.leaf,    label: "Safe &\nNon-Toxic",  bg: "bg-[#e8f5e9]", iconColor: "bg-[#4caf50]" },
+    { icon: ICONS.bulb,    label: "Boosts\nCreativity", bg: "bg-[#f3e5f5]", iconColor: "bg-[#9c27b0]" },
+    { icon: ICONS.sparkle, label: "Hours\nof Fun",      bg: "bg-[#fffde7]", iconColor: "bg-[#f9a825]" },
+    { icon: ICONS.shield,  label: "Durable\n& Safe",    bg: "bg-[#fce4ec]", iconColor: "bg-[#e91e8c]" },
   ];
 }
 
@@ -290,24 +314,34 @@ function Stars({ rating, size = "md" }: { rating: number; size?: "sm" | "md" }) 
 
 function RelatedCard({ product }: { product: ProductDetail }) {
   const [cartAdded, setCartAdded] = useState(false);
+  const [wished, setWished] = useState(false);
   return (
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-      <Link href={`/shop/${product.id}`} className="block relative shrink-0" style={{ height: 180 }}>
-        <div className={`${product.bg} absolute inset-0`} />
-        <Image src={product.images[0]} alt={product.name} fill className="object-cover" sizes="20vw" />
-      </Link>
+      <div className="relative shrink-0" style={{ height: 180 }}>
+        <Link href={`/shop/${product.id}`} className="block absolute inset-0">
+          <div className={`${product.bg} absolute inset-0`} />
+          <Image src={product.images[0]} alt={product.name} fill className="object-cover" sizes="20vw" />
+        </Link>
+        <button
+          onClick={() => setWished(w => !w)}
+          className="absolute top-2.5 right-2.5 z-10 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center transition-colors"
+        >
+          <svg className={`w-4 h-4 transition-colors ${wished ? "fill-[#e91e8c] stroke-[#e91e8c]" : "fill-none stroke-gray-400"}`} strokeWidth={1.8} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </button>
+      </div>
       <div className="p-3 flex flex-col flex-1">
         <Link href={`/shop/${product.id}`}>
           <h4 className="text-sm font-bold text-[#1a1a2e] line-clamp-2 mb-1 hover:text-[#e91e8c] transition-colors">{product.name}</h4>
         </Link>
-        <div className="flex items-center gap-1 mb-1">
-          <Stars rating={product.rating} size="sm" />
-          <span className="text-xs text-gray-400">({product.reviews})</span>
-        </div>
-        <div className="flex items-center gap-1.5 flex-wrap mb-3">
+        <div className="flex items-center gap-1.5 flex-wrap mb-1">
           <span className="font-black text-sm text-[#1a1a2e]">₹{product.price}</span>
           <span className="text-xs text-gray-400 line-through">₹{product.origPrice}</span>
-          <span className="text-[10px] font-bold text-[#00897b] bg-[#e0f2f1] px-1.5 py-0.5 rounded">{product.discount}% OFF</span>
+        </div>
+        <div className="flex items-center gap-1 mb-3">
+          <Stars rating={product.rating} size="sm" />
+          <span className="text-xs text-gray-400">({product.reviews})</span>
         </div>
         <button
           className="mt-auto"
@@ -370,8 +404,8 @@ export default function ProductDetailPage() {
 
   const tags = [
     { emoji: "⭐", label: `Age ${product.ageGroup}`, bg: "bg-[#fffde7]" },
-    { emoji: "🎓", label: "Learning\nThrough Play", bg: "bg-[#e8f5e9]" },
-    { emoji: "🌱", label: "Eco-Friendly\nProduct", bg: "bg-[#e8f5e9]" },
+    { emoji: "🎲", label: "Learning\nThrough Play", bg: "bg-[#e8f5e9]" },
+    { emoji: "🍃", label: "Eco-Friendly\nWooden Toy", bg: "bg-[#e8f5e9]" },
     { emoji: "🎁", label: "Perfect\nGift Choice", bg: "bg-[#fce4ec]" },
   ];
 
@@ -463,7 +497,9 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-4 gap-2 mb-5">
               {features.map((f, i) => (
                 <div key={i} className="flex flex-col items-center text-center">
-                  <div className={`${f.bg} w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-1.5 mx-auto`}>{f.emoji}</div>
+                  <div className={`${f.iconColor} w-14 h-14 rounded-full flex items-center justify-center mb-1.5 mx-auto`}>
+                    <FeatureSVG icon={f.icon} />
+                  </div>
                   <span className="text-[10px] font-semibold text-gray-600 leading-tight whitespace-pre-line">{f.label}</span>
                 </div>
               ))}
@@ -523,19 +559,27 @@ export default function ProductDetailPage() {
 
             {/* Delivery info */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                { icon: "🚚", title: "Free Shipping on Orders Above ₹499", sub: "Across India" },
-                { icon: "📦", title: "Estimated Delivery", sub: "3 - 7 Business Days" },
-                { icon: "🔄", title: "Easy Returns", sub: "7 Days Return Policy" },
-              ].map((item, i) => (
-                <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start gap-2.5">
-                  <span className="text-xl leading-none mt-0.5">{item.icon}</span>
-                  <div>
-                    <div className="text-xs font-bold text-[#1a1a2e] leading-tight">{item.title}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">{item.sub}</div>
-                  </div>
+              <div className="bg-[#fce4ec] rounded-xl p-3 flex items-start gap-2.5">
+                <svg className="w-5 h-5 shrink-0 mt-0.5 fill-[#e91e8c]" viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zm-1 1.5l1.96 2.5H17V9.5h2zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                <div>
+                  <div className="text-xs font-bold text-[#1a1a2e] leading-tight">Free Shipping on Orders Above ₹499</div>
+                  <div className="text-xs text-gray-400 mt-0.5">Across India</div>
                 </div>
-              ))}
+              </div>
+              <div className="bg-[#e8f5e9] rounded-xl p-3 flex items-start gap-2.5">
+                <svg className="w-5 h-5 shrink-0 mt-0.5 fill-[#4caf50]" viewBox="0 0 24 24"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
+                <div>
+                  <div className="text-xs font-bold text-[#1a1a2e] leading-tight">Estimated Delivery</div>
+                  <div className="text-xs text-gray-400 mt-0.5">3 - 7 Business Days</div>
+                </div>
+              </div>
+              <div className="bg-[#e8eaf6] rounded-xl p-3 flex items-start gap-2.5">
+                <svg className="w-5 h-5 shrink-0 mt-0.5 fill-[#3f51b5]" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L17 9l-8 8z"/></svg>
+                <div>
+                  <div className="text-xs font-bold text-[#1a1a2e] leading-tight">Easy Returns</div>
+                  <div className="text-xs text-gray-400 mt-0.5">7 Days Return Policy</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
