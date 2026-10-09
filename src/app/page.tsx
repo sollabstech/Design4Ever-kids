@@ -13,7 +13,7 @@ export default function HomePage() {
       <ProductGrid title="Featured Products" />
       <PromoBanners />
       <TrustBadges />
-      <ProductGrid title="Best Sellers" />
+      <ProductGrid title="Best Sellers" kind="bestsellers" />
       <Newsletter />
     </>
   );

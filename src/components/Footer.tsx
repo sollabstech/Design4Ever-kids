@@ -3,25 +3,48 @@ import Link from "next/link";
 const footerCols = [
   {
     title: "Quick Links",
-    links: ["Home", "Shop", "Categories", "Offers", "Blog"],
+    links: [
+      { label: "Home", href: "/" },
+      { label: "Shop", href: "/shop" },
+      { label: "Categories", href: "/categories" },
+      { label: "Offers", href: "/offers" },
+      { label: "Blog", href: "/blog" },
+    ],
   },
   {
     title: "Customer Support",
-    links: ["Help Center", "Track Order", "Returns & Refunds", "Shipping Info", "Contact Us"],
+    links: [
+      { label: "Help Center", href: "/help" },
+      { label: "Track Order", href: "/track-order" },
+      { label: "Returns & Refunds", href: "/returns" },
+      { label: "Shipping Info", href: "/shipping" },
+      { label: "Contact Us", href: "/contact" },
+    ],
   },
   {
     title: "For Vendors",
-    links: ["Sell With Us", "Vendor Login", "Vendor Registration", "Partner Guidelines"],
+    links: [
+      { label: "Sell With Us", href: "/sell-with-us" },
+      { label: "Vendor Login", href: "/sell-with-us#vendor-login" },
+      { label: "Vendor Registration", href: "/sell-with-us#register" },
+      { label: "Partner Guidelines", href: "/partner-guidelines" },
+    ],
   },
   {
     title: "Legal",
-    links: ["Privacy Policy", "Terms & Conditions", "Refund Policy", "Cookie Policy"],
+    links: [
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms & Conditions", href: "/terms" },
+      { label: "Refund Policy", href: "/refund-policy" },
+      { label: "Cookie Policy", href: "/cookie-policy" },
+    ],
   },
 ];
 
 const socials = [
   {
     label: "Facebook",
+    href: "https://facebook.com",
     bg: "bg-[#1877f2]",
     icon: (
       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -31,6 +54,7 @@ const socials = [
   },
   {
     label: "Instagram",
+    href: "https://instagram.com",
     bg: "bg-gradient-to-br from-[#f09433] via-[#e6683c] via-[#dc2743] via-[#cc2366] to-[#bc1888]",
     icon: (
       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -40,6 +64,7 @@ const socials = [
   },
   {
     label: "Pinterest",
+    href: "https://pinterest.com",
     bg: "bg-[#e60023]",
     icon: (
       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -49,6 +74,7 @@ const socials = [
   },
   {
     label: "YouTube",
+    href: "https://youtube.com",
     bg: "bg-[#ff0000]",
     icon: (
       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -66,13 +92,16 @@ export default function Footer() {
           {/* Socials */}
           <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:min-w-[80px]">
             {socials.map((s) => (
-              <button
+              <a
                 key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label={s.label}
                 className={`${s.bg} text-white w-9 h-9 rounded-full flex items-center justify-center hover:opacity-90 transition-opacity`}
               >
                 {s.icon}
-              </button>
+              </a>
             ))}
           </div>
 
@@ -83,12 +112,12 @@ export default function Footer() {
                 <h4 className="text-sm font-black text-[#1a1a2e] mb-3">{col.title}</h4>
                 <ul className="space-y-2">
                   {col.links.map((link) => (
-                    <li key={link}>
+                    <li key={link.label}>
                       <Link
-                        href="#"
+                        href={link.href}
                         className="text-xs text-gray-500 hover:text-[#e91e8c] transition-colors"
                       >
-                        {link}
+                        {link.label}
                       </Link>
                     </li>
                   ))}
@@ -97,6 +126,11 @@ export default function Footer() {
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-2 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
+        <span>© {new Date().getFullYear()} Design4EverKids. All rights reserved.</span>
+        <span>Made with ❤️ for curious little minds</span>
       </div>
 
       {/* Bottom cloud strip */}

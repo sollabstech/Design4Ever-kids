@@ -3,6 +3,7 @@ import { Nunito } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { StoreProvider } from "@/lib/store";
 
 const nunito = Nunito({
   variable: "--font-body",
@@ -11,18 +12,20 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Design4Ever | Toys, Books & More for Kids",
+  title: { default: "Design4Ever | Toys, Books & More for Kids", template: "%s | Design4Ever" },
   description:
     "Shop curated toys, books, art & craft, educational toys and more for kids.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${nunito.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-white text-[#1a1a2e]" style={{ fontFamily: "var(--font-body), Nunito, sans-serif" }}>
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <StoreProvider>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </StoreProvider>
       </body>
     </html>
   );
