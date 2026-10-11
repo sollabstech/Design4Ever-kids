@@ -52,7 +52,7 @@ export default function ConfirmationClient() {
                 <div>
                   <h1 className="text-2xl font-black text-[#1a1a2e] mb-0.5">Thank you, {firstName}!</h1>
                   <p className="text-sm font-semibold text-gray-700 mb-1">Your order has been placed successfully.</p>
-                  <p className="text-xs text-gray-500">We&apos;ve sent an order confirmation to <span className="font-semibold text-gray-700">{order.email}</span></p>
+                  <p className="text-xs text-gray-500">We&apos;ve sent an order confirmation to <span className="font-semibold text-gray-700">{order.email || order.address.phone}</span></p>
                 </div>
               </div>
               <div className="sm:text-right shrink-0 sm:border-l sm:border-green-200 sm:pl-5">

@@ -31,13 +31,13 @@ export default function SettingsPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteText, setDeleteText] = useState("");
 
-  const submitPw = (e: React.FormEvent) => {
+  const submitPw = async (e: React.FormEvent) => {
     e.preventDefault();
     const issue = passwordIssue(pw.next);
     if (!pw.current) return setPwError("Enter your current password.");
     if (issue) return setPwError(issue);
     if (pw.next !== pw.confirm) return setPwError("New passwords don't match.");
-    const r = changePassword(pw.current, pw.next);
+    const r = await changePassword(pw.current, pw.next);
     if (!r.ok) return setPwError(r.error);
     setPw({ current: "", next: "", confirm: "" });
     setPwError("");
@@ -82,9 +82,9 @@ export default function SettingsPage() {
 
       {confirmDelete && (
         <Modal title="Delete your account?" onClose={() => setConfirmDelete(false)}>
-          <p className="text-sm text-gray-500 mb-4">This can&apos;t be undone. Type <b>DELETE</b> to confirm deleting <b>{user?.email}</b>.</p>
+          <p className="text-sm text-gray-500 mb-4">This can&apos;t be undone. Type <b>DELETE</b> to confirm deleting <b>{user?.email || user?.phone}</b>.</p>
           <input value={deleteText} onChange={(e) => setDeleteText(e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-red-400 mb-4" />
-          <button disabled={deleteText !== "DELETE"} onClick={() => { deleteAccount(); router.push("/"); }} className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl disabled:opacity-40">Permanently Delete</button>
+          <button disabled={deleteText !== "DELETE"} onClick={async () => { const r = await deleteAccount(); if (r.ok) router.push("/"); else toast(r.error, "error"); }} className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl disabled:opacity-40">Permanently Delete</button>
         </Modal>
       )}
     </div>

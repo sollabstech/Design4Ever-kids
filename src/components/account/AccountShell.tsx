@@ -42,7 +42,7 @@ export default function AccountShell({ children }: { children: React.ReactNode }
   const isActive = (href: string) => (href === "/account" ? pathname === href : pathname.startsWith(href));
   const badge = orders.length >= 5 ? "Super Shopper" : orders.length > 0 ? "Happy Shopper" : "New Member";
 
-  const doLogout = () => { logout(); router.push("/"); };
+  const doLogout = () => { router.push("/"); void logout(); };
 
   return (
     <div className="bg-gradient-to-b from-[#e0f4fb]/60 via-gray-50 to-gray-50 min-h-screen">

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ageLabel, categoryLabel, discountOf, formatINR, FREE_SHIPPING_THRESHOLD, getProduct, relatedProducts } from "@/lib/catalog";
-import { useStore } from "@/lib/store";
+import { useStore, type Review } from "@/lib/store";
 import { Breadcrumbs, CART_PATH, HEART_PATH, RecoCard, SectionTitle, Stars, StarIcon, fmtDate } from "@/components/ui";
 import { FeatureSVG, getFeatures } from "@/components/shop/features";
 
@@ -20,7 +20,7 @@ type Tab = "description" | "specs" | "reviews" | "shipping";
 export default function ProductDetail({ productId }: { productId: number }) {
   const product = getProduct(productId)!;
   const router = useRouter();
-  const { addToCart, cart, isWished, toggleWishlist, toast, user, orders, productReviews, addReview } = useStore();
+  const { addToCart, cart, isWished, toggleWishlist, toast, user, orders, productReviews, addReview, loadProductReviews } = useStore();
 
   const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
@@ -36,8 +36,16 @@ export default function ProductDetail({ productId }: { productId: number }) {
   const features = getFeatures(product.material);
   const category = categoryLabel(product.categoryId);
   const mine = productReviews(product.id);
+  // Reviews from other customers, loaded from the backend.
+  const [community, setCommunity] = useState<Review[]>([]);
+  useEffect(() => {
+    let live = true;
+    loadProductReviews(productId).then((list) => { if (live) setCommunity(list); });
+    return () => { live = false; };
+  }, [productId, loadProductReviews]);
+  const others = community.filter((r) => !mine.some((m) => m.id === r.id));
   const purchased = orders.some((o) => o.items.some((i) => i.productId === product.id));
-  const reviewCount = product.reviews + mine.length;
+  const reviewCount = product.reviews + mine.length + others.length;
 
   const handleAddToCart = () => {
     if (qty > maxQty) { toast(`Only ${maxQty} more available`, "error"); return; }
@@ -352,6 +360,20 @@ export default function ProductDetail({ productId }: { productId: number }) {
                           </div>
                         </div>
                         {purchased && <span className="text-xs text-[#2e7d32] bg-[#e8f5e9] px-2 py-0.5 rounded-full font-semibold">✓ Verified Purchase</span>}
+                      </div>
+                      <Stars rating={r.rating} />
+                      <p className="text-sm font-bold text-[#1a1a2e] mt-2">{r.title}</p>
+                      <p className="text-sm text-gray-600 mt-1 leading-relaxed">{r.text}</p>
+                    </div>
+                  ))}
+                  {others.map((r) => (
+                    <div key={r.id} className="border border-gray-100 rounded-2xl p-4">
+                      <div className="flex items-center gap-2.5 mb-2">
+                        <div className="w-9 h-9 rounded-full bg-[#fce4ec] flex items-center justify-center text-[#e91e8c] font-bold text-sm shrink-0">{r.userName.charAt(0)}</div>
+                        <div>
+                          <div className="text-sm font-bold text-[#1a1a2e]">{r.userName}</div>
+                          <div className="text-xs text-gray-400">{fmtDate(r.date)}</div>
+                        </div>
                       </div>
                       <Stars rating={r.rating} />
                       <p className="text-sm font-bold text-[#1a1a2e] mt-2">{r.title}</p>

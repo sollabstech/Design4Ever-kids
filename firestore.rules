@@ -1,0 +1,38 @@
+rules_version = '2';
+
+// Security rules for the Design4Ever storefront.
+// Deploy with: firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // Profile + cart, wishlist, addresses, settings. Private to the owner.
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // Orders: customers create and read their own. They may only change
+    // status (cancel / return), payment status and the delivery address.
+    match /orders/{orderId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['manualStatus', 'manualStatusAt', 'payment', 'address', 'customerName']);
+      allow delete: if false;
+    }
+
+    // Reviews: public to read, written only by their author.
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create, update: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

@@ -5,74 +5,152 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { isEmail, isPhone, passwordIssue } from "@/lib/validate";
-import { Field, inputCls } from "@/components/ui";
-import PasswordInput from "@/components/auth/PasswordInput";
-import { safeNext } from "../login/LoginForm";
+import { safeNext } from "@/lib/nav";
+import { authLink, Divider, IconInput, KeyIcon, MailIcon, PasswordField, pinkBtn, SocialButtons, UserIcon } from "@/components/auth/AuthBits";
+
+const RESEND_SECONDS = 30;
 
 export default function SignupForm() {
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
-  const { ready, user, signup } = useStore();
-  const [v, setV] = useState({ name: "", email: "", phone: "", password: "", confirm: "" });
+  const { ready, user, startSignup, completeSignup, toast } = useStore();
+
+  const [name, setName] = useState("");
+  const [id, setId] = useState("");
+  // After "Get OTP": how the code was sent. "demo" shows the code on screen (no backend yet);
+  // "sms" is a real Firebase SMS; "email" skips the code and sends a verification link after sign-up.
+  const [channel, setChannel] = useState<null | "sms" | "email" | "demo">(null);
+  const [demoCode, setDemoCode] = useState("");
+  const [sentTo, setSentTo] = useState("");
+  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
   const [agree, setAgree] = useState(false);
-  const [touched, setTouched] = useState(false);
-  const [error, setError] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  const [busy, setBusy] = useState<null | "otp" | "create">(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (ready && user) router.replace(next);
   }, [ready, user, next, router]);
 
-  const errors: Partial<Record<keyof typeof v | "agree", string>> = {};
-  if (v.name.trim().length < 2) errors.name = "Please enter your name.";
-  if (!isEmail(v.email)) errors.email = "Enter a valid email address.";
-  if (!isPhone(v.phone)) errors.phone = "Enter a valid 10-digit mobile number.";
-  const pw = passwordIssue(v.password);
-  if (pw) errors.password = pw;
-  if (v.confirm !== v.password) errors.confirm = "Passwords don't match.";
-  if (!agree) errors.agree = "Please accept the terms to continue.";
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
 
-  const set = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement>) => { setV((x) => ({ ...x, [k]: e.target.value })); setError(""); };
-  const err = (k: keyof typeof errors) => (touched ? errors[k] : undefined);
+  const clear = (k: string) => setErrors((e) => { const n = { ...e }; delete n[k]; delete n.form; return n; });
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setTouched(true);
-    if (Object.keys(errors).length) return;
-    const r = signup({ name: v.name, email: v.email, phone: v.phone, password: v.password });
-    if (!r.ok) setError(r.error);
+  const getOtp = async () => {
+    const e: Record<string, string> = {};
+    if (name.trim().length < 2) e.name = "Please enter your full name.";
+    if (!isEmail(id) && !isPhone(id)) e.id = "Enter a valid email or 10-digit phone number.";
+    setErrors(e);
+    if (Object.keys(e).length) return;
+    setBusy("otp");
+    const r = await startSignup({ name, identifier: id, recaptchaContainerId: "recaptcha-container" });
+    setBusy(null);
+    if (!r.ok) { setErrors({ id: r.error }); return; }
+    setChannel(r.channel);
+    setDemoCode(r.demoCode ?? "");
+    setSentTo(id.trim());
+    setOtp("");
+    if (r.channel !== "email") {
+      setCooldown(RESEND_SECONDS);
+      toast(`OTP sent to ${id.trim()}`, "info");
+    }
   };
 
+  const submit = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    const e: Record<string, string> = {};
+    if (!channel) e.form = "Tap “Get OTP” to verify your email or phone first.";
+    else {
+      if (id.trim() !== sentTo) e.id = "You changed this — tap Get OTP again.";
+      if (channel !== "email" && otp.length !== 6) e.otp = "Enter the 6-digit OTP.";
+      const pw = passwordIssue(password);
+      if (pw) e.password = pw;
+    }
+    if (!agree) e.agree = "Please accept the Terms & Conditions and Privacy Policy.";
+    setErrors(e);
+    if (Object.keys(e).length) return;
+    setBusy("create");
+    const r = await completeSignup({ name, identifier: id, password, code: otp });
+    setBusy(null);
+    if (!r.ok) setErrors(/otp/i.test(r.error) ? { otp: r.error } : { form: r.error });
+    else toast(channel === "email" ? "Welcome! Check your inbox to verify your email. 🎉" : "Welcome to Design4Ever! 🎉");
+  };
+
+  const loginHref = `/login${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`;
+  const errText = (k: string) => errors[k] && <p className="text-xs text-red-500 font-semibold mt-1.5">{errors[k]}</p>;
+
   return (
-    <form onSubmit={submit} noValidate className="space-y-4">
-      <Field label="Full Name" required error={err("name")}>
-        <input autoComplete="name" value={v.name} onChange={set("name")} placeholder="e.g. Priya Sharma" className={`${inputCls} ${err("name") ? "border-red-300" : ""}`} />
-      </Field>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Email Address" required error={err("email")}>
-          <input type="email" autoComplete="email" value={v.email} onChange={set("email")} placeholder="you@example.com" className={`${inputCls} ${err("email") ? "border-red-300" : ""}`} />
-        </Field>
-        <Field label="Mobile Number" required error={err("phone")}>
-          <input type="tel" autoComplete="tel" value={v.phone} onChange={set("phone")} placeholder="98765 43210" className={`${inputCls} ${err("phone") ? "border-red-300" : ""}`} />
-        </Field>
-      </div>
-      <Field label="Password" required error={err("password")} hint="At least 8 characters with a letter and a number.">
-        <PasswordInput autoComplete="new-password" value={v.password} onChange={set("password")} placeholder="Create a password" invalid={!!err("password")} />
-      </Field>
-      <Field label="Confirm Password" required error={err("confirm")}>
-        <PasswordInput autoComplete="new-password" value={v.confirm} onChange={set("confirm")} placeholder="Re-enter password" invalid={!!err("confirm")} />
-      </Field>
-      <label className="flex items-start gap-2.5 cursor-pointer select-none">
-        <input type="checkbox" checked={agree} onChange={() => setAgree((a) => !a)} className="w-4 h-4 mt-0.5 rounded accent-[#e91e8c]" />
-        <span className="text-sm text-gray-600">I agree to the <Link href="/terms" className="text-[#e91e8c] font-bold hover:underline">Terms & Conditions</Link> and <Link href="/privacy" className="text-[#e91e8c] font-bold hover:underline">Privacy Policy</Link>.</span>
-      </label>
-      {err("agree") && <p className="text-xs text-red-500 font-semibold -mt-2">{err("agree")}</p>}
-      {error && <div className="bg-[#fdecec] text-[#ef4444] text-sm font-semibold rounded-xl px-4 py-2.5">{error}</div>}
-      <button type="submit" className="w-full bg-[#e91e8c] hover:bg-[#c2187a] text-white font-black py-3.5 rounded-xl transition-colors shadow-lg shadow-pink-200">Create Account</button>
-      <p className="text-sm text-gray-500 text-center">
-        Already have an account?{" "}
-        <Link href={`/login${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-bold text-[#e91e8c] hover:underline">Sign in</Link>
+    <>
+      <form onSubmit={submit} noValidate className="space-y-5">
+        <div>
+          <IconInput icon={<UserIcon />} autoComplete="name" aria-label="Full Name" placeholder="Full Name   (e.g. Priya S)"
+            value={name} onChange={(e) => { setName(e.target.value); clear("name"); }} invalid={!!errors.name} />
+          {errText("name")}
+        </div>
+        <div>
+          <IconInput icon={<MailIcon />} inputMode="email" autoComplete="username" aria-label="Email or Phone Number" placeholder="Email or Phone Number"
+            value={id} onChange={(e) => { setId(e.target.value); clear("id"); }} invalid={!!errors.id} />
+          {errText("id")}
+          {!errors.id && !channel && <p className="text-xs text-[#7b86a6] mt-1.5 ml-1">e.g. priya@example.com or +91 98765 43210</p>}
+        </div>
+
+        {!channel ? (
+          <button type="button" onClick={getOtp} disabled={busy === "otp"} className={`${pinkBtn} py-4 text-xl font-black`}>{busy === "otp" ? "Sending…" : "Get OTP"}</button>
+        ) : (
+          <div className="rounded-2xl bg-[#f5f7fb] p-4 space-y-4">
+            {channel === "email" ? (
+              <p className="text-sm text-[#3b4a7a]">Create a password for <b className="text-[#14215a]">{sentTo}</b>. We&apos;ll email you a link to verify your address.</p>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <span className="text-[#3b4a7a]">Code sent to <b className="text-[#14215a]">{sentTo}</b></span>
+                  <button type="button" disabled={cooldown > 0 || busy === "otp"} onClick={getOtp} className="font-bold text-[#e91e8c] disabled:text-[#7b86a6]">
+                    {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend OTP"}
+                  </button>
+                </div>
+                <div>
+                  <IconInput icon={<KeyIcon />} inputMode="numeric" autoComplete="one-time-code" aria-label="6-digit OTP" placeholder="Enter 6-digit OTP" maxLength={6}
+                    value={otp} onChange={(e) => { setOtp(e.target.value.replace(/\D/g, "").slice(0, 6)); clear("otp"); }} invalid={!!errors.otp} />
+                  {errText("otp")}
+                  {channel === "demo" && <p className="text-[11px] text-[#7b86a6] mt-1.5 ml-1">Demo mode — your OTP is <b className="text-[#14215a] tracking-widest">{demoCode}</b></p>}
+                </div>
+              </>
+            )}
+            <div>
+              <PasswordField autoComplete="new-password" aria-label="Create a password" placeholder="Create a password"
+                value={password} onChange={(e) => { setPassword(e.target.value); clear("password"); }} invalid={!!errors.password} />
+              {errors.password ? errText("password") : <p className="text-[11px] text-[#7b86a6] mt-1.5 ml-1">At least 8 characters with a letter and a number.</p>}
+            </div>
+          </div>
+        )}
+        {/* Invisible reCAPTCHA used by Firebase phone sign-up */}
+        <div id="recaptcha-container" />
+
+        <div>
+          <label className="flex items-start gap-3 cursor-pointer select-none text-[15px] text-[#14215a]">
+            <input type="checkbox" checked={agree} onChange={() => { setAgree((a) => !a); clear("agree"); }} className="w-5 h-5 mt-0.5 rounded accent-[#e91e8c] shrink-0" />
+            <span>I agree to the <Link href="/terms" className={authLink}>Terms &amp; Conditions</Link> and <Link href="/privacy" className={authLink}>Privacy Policy</Link></span>
+          </label>
+          {errText("agree")}
+        </div>
+
+        {errors.form && <div role="alert" className="bg-[#fdecec] text-[#ef4444] text-sm font-semibold rounded-xl px-4 py-2.5">{errors.form}</div>}
+
+        <button type="submit" disabled={busy === "create"} className={`${pinkBtn} py-4 text-lg`}>{busy === "create" ? "Creating account…" : "Create Account"}</button>
+      </form>
+
+      <Divider label="or sign up with" />
+      <SocialButtons />
+
+      <p className="text-center text-[15px] text-[#14215a] mt-8">
+        Already have an account? <Link href={loginHref} className={`${authLink} text-base`}>Sign In</Link>
       </p>
-    </form>
+    </>
   );
 }

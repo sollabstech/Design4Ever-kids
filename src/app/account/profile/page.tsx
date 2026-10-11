@@ -62,7 +62,7 @@ export default function ProfilePage() {
             </Field>
           </div>
           <Field label="Email Address" hint="Contact support to change the email on your account.">
-            <input value={user!.email} disabled className={`${inputCls} bg-gray-50 text-gray-400 cursor-not-allowed`} />
+            <input value={user!.email || "Not added (signed up with phone)"} disabled className={`${inputCls} bg-gray-50 text-gray-400 cursor-not-allowed`} />
           </Field>
           <Field label="Child's Name" hint="Optional — helps us recommend age-appropriate picks.">
             <input value={v.childName} onChange={(e) => setV((x) => ({ ...x, childName: e.target.value }))} placeholder="e.g. Aarav" className={inputCls} />

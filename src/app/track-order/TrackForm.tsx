@@ -2,21 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { findOrderAnywhere, orderStatus, useStore, type Order } from "@/lib/store";
+import { orderStatus, useStore, type Order } from "@/lib/store";
 import { Field, inputCls, StatusPill, fmtDate } from "@/components/ui";
 import { OrderItemsCard, TrackingCard } from "@/components/order/OrderParts";
 
 export default function TrackForm() {
-  const { user, orders } = useStore();
+  const { user, orders, findOrder, backendKind } = useStore();
+  const [busy, setBusy] = useState(false);
   const [id, setId] = useState("");
   const [contact, setContact] = useState("");
   const [result, setResult] = useState<Order | null | "none">(null);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id.trim() || !contact.trim()) return;
-    setResult(findOrderAnywhere(id, contact) ?? "none");
+    setBusy(true);
+    setResult((await findOrder(id, contact)) ?? "none");
+    setBusy(false);
   };
+  const needsSignIn = backendKind === "firebase" && !user;
 
   return (
     <div className="max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -27,8 +31,15 @@ export default function TrackForm() {
         <Field label="Email or Phone" required>
           <input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="you@example.com" className={inputCls} />
         </Field>
-        <button type="submit" className="bg-[#e91e8c] hover:bg-[#c2187a] text-white font-bold px-6 py-3 rounded-xl">Track</button>
+        <button type="submit" disabled={busy || needsSignIn} className="bg-[#e91e8c] hover:bg-[#c2187a] text-white font-bold px-6 py-3 rounded-xl disabled:opacity-50">{busy ? "Tracking…" : "Track"}</button>
       </form>
+
+      {needsSignIn && (
+        <div className="bg-[#fff0f7] rounded-2xl p-4 text-sm font-semibold text-[#1a1a2e] flex items-center justify-between gap-3 flex-wrap">
+          For your privacy, please sign in to track your orders.
+          <Link href="/login?next=/track-order" className="bg-[#e91e8c] text-white font-bold px-4 py-2 rounded-xl hover:bg-[#c2187a]">Sign In</Link>
+        </div>
+      )}
 
       {result === "none" && (
         <div className="bg-[#fdecec] text-[#ef4444] rounded-2xl p-4 text-sm font-semibold">We couldn&apos;t find an order with those details. Please check the order number and the email/phone used at checkout.</div>

@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Sign In" };
 
 export default function LoginPage() {
   return (
-    <AuthShell title="Welcome back! 👋" subtitle="Sign in to your Design4Ever account.">
+    <AuthShell title="Sign In" subtitle="Access your account to manage orders, wishlist and more.">
       <Suspense>
         <LoginForm />
       </Suspense>

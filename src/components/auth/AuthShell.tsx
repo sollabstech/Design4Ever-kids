@@ -1,33 +1,26 @@
 import Image from "next/image";
-import Link from "next/link";
 
-export default function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+// Demo background photo — replace with your own image (e.g. put a file in
+// /public and set this to "/auth-bg.jpg").
+export const AUTH_BG = "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=1920&h=1200&fit=crop&auto=format&q=80";
+
+/** Full-bleed background image with the auth card on the right (centred on mobile). */
+export default function AuthShell({ title, subtitle, children, background = AUTH_BG }: {
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+  background?: string;
+}) {
   return (
-    <div className="bg-gradient-to-br from-[#fce4ec] via-[#fdf6fb] to-[#e0f4fb] min-h-[calc(100vh-140px)] py-10 px-4">
-      <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl shadow-pink-100 overflow-hidden grid md:grid-cols-2">
-        {/* Illustration side */}
-        <div className="hidden md:flex relative bg-[#e91e8c] p-10 flex-col justify-between text-white overflow-hidden">
-          <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-white/10" />
-          <div className="absolute -left-10 bottom-10 w-40 h-40 rounded-full bg-white/10" />
-          <Link href="/" className="relative bg-white rounded-2xl px-4 py-2 self-start">
-            <Image src="/logo.png" alt="Design4EverKids" width={150} height={50} className="h-10 w-auto object-contain" />
-          </Link>
-          <div className="relative">
-            <div className="text-6xl mb-4">🧸🎨📚</div>
-            <h2 className="text-3xl font-black leading-tight">Where little minds<br />grow big dreams.</h2>
-            <p className="text-sm opacity-90 mt-3 max-w-xs">Track orders, save your favourites and check out faster with your Design4Ever account.</p>
-          </div>
-          <div className="relative grid grid-cols-3 gap-2 text-center text-xs font-bold">
-            <div className="bg-white/15 rounded-xl py-2">🚚<br />Free Shipping ₹499+</div>
-            <div className="bg-white/15 rounded-xl py-2">🔄<br />7-Day Returns</div>
-            <div className="bg-white/15 rounded-xl py-2">🛡️<br />Safe Toys</div>
-          </div>
-        </div>
+    <div className="relative min-h-[calc(100vh-140px)] bg-[#dbeefc] overflow-hidden">
+      <Image src={background} alt="" fill priority className="object-cover" sizes="100vw" />
+      {/* Soft light-blue wash so the card stays readable over any photo */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#dbeefc]/10 via-[#dbeefc]/30 to-[#dbeefc]/80" />
 
-        {/* Form side */}
-        <div className="p-6 sm:p-10">
-          <h1 className="text-2xl sm:text-3xl font-black text-[#1a1a2e]">{title}</h1>
-          <p className="text-sm text-gray-500 mt-1 mb-6">{subtitle}</p>
+      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-8 py-10 sm:py-14 flex justify-center lg:justify-end">
+        <div className="w-full max-w-[520px] bg-white rounded-3xl shadow-2xl shadow-[#14215a]/10 px-6 py-8 sm:px-12 sm:py-11">
+          <h1 className="text-3xl sm:text-[40px] leading-tight font-black text-[#14215a] text-center">{title}</h1>
+          <p className="text-[15px] sm:text-base text-[#3b4a7a] text-center mt-2 mb-8 max-w-sm mx-auto">{subtitle}</p>
           {children}
         </div>
       </div>
